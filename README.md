@@ -65,6 +65,103 @@ Trims technical artifacts used during sequencing
 
 
 ## Step 1: Data Download
+
+### Preparing Download Links
+
+The data download process has been automated to retrieve all FASTQ files associated with a specific ENA study accession. The download script performs the following operations:
+
+1. **API Query**: ENA's file report API is queried to retrieve all FASTQ download URLs
+2. **URL Processing**: FTP URLs are extracted and formatted appropriately
+3. **Parallel Download**: Multiple files are downloaded concurrently using wget
+
+### Configuration Parameters
+
+The download script utilises several configurable parameters:
+
+```bash
+ENA_STUDY="SRP080947"                           # Target ENA study accession
+OUTDIR="/mnt/vol1/RNA-Seq/fastq_files"         # Output directory path
+LINKFILE="/mnt/vol1/RNA-Seq/ena_ftp_links.txt" # Generated URL list file
+N_CORES=6                                       # Parallel download threads
+```
+
+### Executing Download
+
+```bash
+./download_sra.sh
+```
+
+The script automatically:
+- Creates the output directory structure
+- Queries ENA API for all FASTQ files in the specified study
+- Generates `ena_ftp_links.txt` containing all download URLs
+- Downloads files in parallel using the specified number of cores
+- Provides progress feedback and error handling
+
+Troubleshooting:
+- Most common error is not changing the directory in the download code. The
+download code itself runs a script that executes the command. Check the code to
+ensure the directory in the script matches the directory you wish to execute the
+script in. This is essential for every script ran!
+
+## Step 2: Quality control
+
+Quality metrics are generated for all raw FASTQ files:
+
+```bash
+# Generate individual FastQC reports
+fastqc -o qc_raw/ fastq_files/*.fastq.gz
+
+# Compile aggregated MultiQC report
+multiqc -o qc_raw/ qc_raw/
+```
+
+Quality reports will be available in the `qc_raw/` directory for examination.
+
+Examining the code:
+- qc_raw is a new directory that is made with this code
+- "*" filters files that have the specific phrase after it in this case
+looking only at fastq.gz files
+- Overall, takes the data files in the fastqc_files directory and creates fastqc
+reports in new directory qc_raw
+- Multiqc takes those reports in qc_raw and creates a multiqc report in the 
+directory qc_raw
+
+Problems that may be encountered:
+- Make sure you are in the right working directory using cd when running the 
+code otherwise the fastqc_files directory may not be found
+- If an error is received like: "No files named qc_raw are found", you may 
+have to manually create the directory using mkdir
+
+These reports can be viewed on R
+
+## Step 3: Adapter Removal
+
+
+### Read Trimming Execution
+Most trimmers detect adapters for single-end reads. 
+
+```bash
+# Single-end trimming with fastp (auto-detect adapters)
+./fastq_trimmer.sh \
+  --in-dir fastq_files/ \
+  --out-dir fastq_trimmed/
+```
+
+Trimmed reads will be written to the `fastq_trimmed/` directory.
+
+Examining the code:
+- Creates a new directory "fastq_trimmed" where fastqc files from the 
+directory fastq_files are trimmed
+- Examining the script "fastq_trimmer.sh" highlights they are trimmed based on 
+Phred scores and nucleotide length of read
+
+Troubleshooting:
+- Same principles apply as the last script ran
+- Ensure the name of the script written in code is as saved, ./ executes said script
+
+
+
   
   
   
