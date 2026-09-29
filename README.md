@@ -160,6 +160,84 @@ Troubleshooting:
 - Same principles apply as the last script ran
 - Ensure the name of the script written in code is as saved, ./ executes said script
 
+## Step 4: Transcript Quantification
+
+### Reference Preparation (transcriptome)
+
+Kallisto builds an index from a **transcriptome FASTA** (e.g., Ensembl cDNA), not from a genome FASTA.
+Use a transcriptome that matches your GTF **and release version**.  
+In this project we use **mouse (Mus musculus), GRCm39, Ensembl r115**.
+
+```bash
+# Create an index once (example paths)
+PROJ_DIR=/mnt/vol1/Mouse_model_RNA_Seq
+INDEX_DIR="$PROJ_DIR/index"
+mkdir -p "$INDEX_DIR"
+cd "$INDEX_DIR"
+
+# Download Ensembl r115 mouse cDNA transcriptome
+wget -O Mus_musculus.GRCm39.cdna.all.fa.gz \
+  https://ftp.ensembl.org/pub/release-115/fasta/mus_musculus/cdna/Mus_musculus.GRCm39.cdna.all.fa.gz
+
+# Build Kallisto index from cDNA (default k=31)
+gunzip -c Mus_musculus.GRCm39.cdna.all.fa.gz > transcripts.fa
+kallisto index -i mouse_transcriptome.r115.k31.idx transcripts.fa
+
+```
+
+After preparing the index, quantify your samples with the relevant index and reads.
+
+Examining the code:
+- Uses wget to pull data from link
+- Uses gunzip -c to uncompress the data and redirect it into a FASTA file "transcripts.fa"
+- Builds the kallisto index into file "mouse_transcriptome.r115.k31.idx"
+
+Troubleshooting:
+- A problem I encountered was that I ran this code on a standard laptop with little
+available RAM, and the process was killed.
+
+The way around this:
+```bash
+# 1. Allocate an 8 GB file
+sudo fallocate -l 8G /swapfile
+
+# 2. Secure file permissions
+sudo chmod 600 /swapfile
+
+# 3. Format it as swap space
+sudo mkswap /swapfile
+
+# 4. Turn the swap on
+sudo swapon /swapfile
+
+# 5. Verify swap is active
+free -h
+
+```
+
+This code creates a temporary 8G swap file to use as additional ran. It allocates
+8G of disk space as virtual memory.
+- Using free -h shows your available RAM. Around 5-6 GB is required to run kallisto index
+
+Once done you can run this code to delete the swap file:
+
+```bash
+sudo swapoff /swapfile
+sudo rm /swapfile
+```
+
+### Single-End Quantification
+
+Kallisto requires the fragment length mean (-l) and sd (-s) for single-end.
+
+```bash
+kallisto quant --single \
+  -i "$INDEX_DIR/mouse_transcriptome.r115.k31.idx" \
+  -o /mnt/vol1/Mouse_model_RNA_Seq/kallisto_results/SAMPLE_ID_SE \
+  -t 16 \
+  -l 200 -s 20 \
+  /path/to/trimmed/SAMPLE_ID_trimmed.fastq.gz
+```
 
 
   
