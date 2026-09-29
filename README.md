@@ -64,6 +64,26 @@ Trims technical artifacts used during sequencing
 - Removes reads that become to short after trimming
 
 
+### Kallisto installation
+
+```bash
+sudo apt-get install kallisto
+```
+
+#### Kallisto Overview
+
+- Performs pseudoalignment of data to estimate transcript abundances
+  - Breaks reads down into short sequences
+  - Checks which transcripts share those sequences
+  - Groups those transcripts together
+  - Assigns them to Transcripts 
+- The point:
+  - Quantify gene and transcript expression levels across biological samples
+  - Kallisto counts how many sequencing reads originate from each known transcript
+  - Higher read counts reflect higher transcript abundance in the cell
+
+
+
 ## Step 1: Data Download
 
 ### Preparing Download Links
